@@ -1,0 +1,334 @@
+```json
+{
+  "TestCases": [
+    {
+      "TestCaseID": "B_001_TC_001_functional_positive",
+      "TestDescription": "Verify successful mapping of patient identifier (PID.3) to FHIR Patient.identifier with a valid patient ID.",
+      "ExpectedOutput": "FHIR Patient resource should contain an identifier with the system set to 'http://hospital.org/patient-ids' and the value matching the PID.3.",
+      "TestSteps": [
+        "Provide an ADT message with a valid patient ID in PID.3 (e.g., PID.3=12345).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.identifier.value matches the PID.3 value (12345).",
+        "Validate that the Patient.identifier.system is 'http://hospital.org/patient-ids'."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains an identifier with the correct system and value from PID.3. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_002_functional_negative",
+      "TestDescription": "Verify handling of missing patient identifier (PID.3) in the ADT message. Identifier is a required field.",
+      "ExpectedOutput": "Transformation process should either generate an error message or create a Patient resource with an empty identifier array or set the identifier to null.",
+      "TestSteps": [
+        "Provide an ADT message with PID.3 field missing.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the transformation process generates an error or the Patient.identifier array is empty."
+      ],
+      "PassFailCriteria": "Test passes if the transformation generates an error message or Patient.identifier array is empty when PID.3 is missing. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_003_functional_positive",
+      "TestDescription": "Verify successful mapping of patient name (PID.5) to FHIR Patient.name with all name components present.",
+      "ExpectedOutput": "FHIR Patient resource should contain a name with family, given, and prefix populated from PID.5.1, PID.5.2, and PID.5.5 respectively.",
+      "TestSteps": [
+        "Provide an ADT message with PID.5.1 (family), PID.5.2 (given), and PID.5.5 (prefix) populated (e.g., PID.5.1=Smith, PID.5.2=John, PID.5.5=Mr.).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.name array contains an entry with family='Smith', given=['John'], and prefix=['Mr.']"
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains a name element with correctly mapped family, given, and prefix from PID.5. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_004_functional_positive",
+      "TestDescription": "Verify successful mapping of patient name (PID.5) with only family name present.",
+      "ExpectedOutput": "FHIR Patient resource should contain a name with only family populated from PID.5.1.",
+      "TestSteps": [
+        "Provide an ADT message with only PID.5.1 (family) populated (e.g., PID.5.1=Smith).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.name array contains an entry with family='Smith'."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains a name element with correctly mapped family from PID.5.1. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_005_functional_positive",
+      "TestDescription": "Verify successful mapping of patient name (PID.5) with only given name present.",
+      "ExpectedOutput": "FHIR Patient resource should contain a name with only given populated from PID.5.2.",
+      "TestSteps": [
+        "Provide an ADT message with only PID.5.2 (given) populated (e.g., PID.5.2=John).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.name array contains an entry with given=['John'].",
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains a name element with correctly mapped given name from PID.5.2. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_006_functional_negative",
+      "TestDescription": "Verify handling of missing patient name (PID.5) in the ADT message. Name is an optional field.",
+      "ExpectedOutput": "FHIR Patient resource should either not contain a name element or contain an empty name array.",
+      "TestSteps": [
+        "Provide an ADT message with PID.5 field missing.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the transformation process either does not generate a Patient.name element or Patient.name array is empty."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource does not contain a name element or contains an empty name array when PID.5 is missing. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_007_functional_positive",
+      "TestDescription": "Verify successful mapping of patient birth date (PID.7) to FHIR Patient.birthDate with a valid date.",
+      "ExpectedOutput": "FHIR Patient resource should contain a birthDate matching the PID.7 value, converted to YYYY-MM-DD format.",
+      "TestSteps": [
+        "Provide an ADT message with a valid date in PID.7 in YYYYMMDD format (e.g., PID.7=20001231).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.birthDate matches the converted date (2000-12-31)."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains a birthDate with the correctly converted date from PID.7. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_008_functional_negative",
+      "TestDescription": "Verify handling of invalid patient birth date (PID.7) format.",
+      "ExpectedOutput": "Transformation process should either generate an error message or the Patient.birthDate should not be populated.",
+      "TestSteps": [
+        "Provide an ADT message with an invalid date format in PID.7 (e.g., PID.7=2000/12/31).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the transformation process generates an error message or Patient.birthDate is not populated."
+      ],
+      "PassFailCriteria": "Test passes if the transformation generates an error message or Patient.birthDate is not populated when PID.7 contains an invalid date format. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_009_functional_positive",
+      "TestDescription": "Verify successful mapping of patient gender (PID.8) to FHIR Patient.gender with a valid 'M' code.",
+      "ExpectedOutput": "FHIR Patient resource should contain gender='male'.",
+      "TestSteps": [
+        "Provide an ADT message with PID.8='M'.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.gender='male'."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains gender='male' when PID.8 is 'M'. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_010_functional_positive",
+      "TestDescription": "Verify successful mapping of patient gender (PID.8) to FHIR Patient.gender with a valid 'F' code.",
+      "ExpectedOutput": "FHIR Patient resource should contain gender='female'.",
+      "TestSteps": [
+        "Provide an ADT message with PID.8='F'.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.gender='female'."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains gender='female' when PID.8 is 'F'. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_011_functional_positive",
+      "TestDescription": "Verify successful mapping of patient gender (PID.8) to FHIR Patient.gender with a valid 'U' code.",
+      "ExpectedOutput": "FHIR Patient resource should contain gender='unknown'.",
+      "TestSteps": [
+        "Provide an ADT message with PID.8='U'.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.gender='unknown'."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains gender='unknown' when PID.8 is 'U'. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_012_functional_negative",
+      "TestDescription": "Verify handling of invalid patient gender (PID.8) code.",
+      "ExpectedOutput": "Transformation process should either generate an error message or Patient.gender should not be populated.",
+      "TestSteps": [
+        "Provide an ADT message with an invalid gender code in PID.8 (e.g., PID.8=X).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the transformation process generates an error message or Patient.gender is not populated."
+      ],
+      "PassFailCriteria": "Test passes if the transformation generates an error message or Patient.gender is not populated when PID.8 contains an invalid gender code. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_013_functional_positive",
+      "TestDescription": "Verify successful mapping of patient address (PID.11) to FHIR Patient.address with all address components present.",
+      "ExpectedOutput": "FHIR Patient resource should contain an address with line, city, state, and postalCode populated from PID.11.1, PID.11.3, PID.11.4, and PID.11.5 respectively.",
+      "TestSteps": [
+        "Provide an ADT message with PID.11.1 (line), PID.11.3 (city), PID.11.4 (state), and PID.11.5 (postalCode) populated (e.g., PID.11.1=123 Main St, PID.11.3=Anytown, PID.11.4=CA, PID.11.5=91234).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.address array contains an entry with line=['123 Main St'], city='Anytown', state='CA', and postalCode='91234'."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains an address element with correctly mapped line, city, state, and postalCode from PID.11. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_014_functional_positive",
+      "TestDescription": "Verify successful mapping of patient address (PID.11) with only address line present.",
+      "ExpectedOutput": "FHIR Patient resource should contain an address with only line populated from PID.11.1.",
+      "TestSteps": [
+        "Provide an ADT message with only PID.11.1 (line) populated (e.g., PID.11.1=123 Main St).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.address array contains an entry with line=['123 Main St'].",
+        "Validate that the other address fields are not present or are null."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains an address element with correctly mapped line from PID.11.1 and other fields are appropriately handled. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_015_functional_negative",
+      "TestDescription": "Verify handling of missing patient address (PID.11) in the ADT message. Address is an optional field.",
+      "ExpectedOutput": "FHIR Patient resource should either not contain an address element or contain an empty address array.",
+      "TestSteps": [
+        "Provide an ADT message with PID.11 field missing.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the transformation process either does not generate a Patient.address element or Patient.address array is empty."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource does not contain an address element or contains an empty address array when PID.11 is missing. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_016_regression_positive",
+      "TestDescription": "Regression test to verify that the patient identifier (PID.3) is correctly mapped after a system update.",
+      "ExpectedOutput": "FHIR Patient resource should contain an identifier with the system set to 'http://hospital.org/patient-ids' and the value matching the PID.3.",
+      "TestSteps": [
+        "Provide an ADT message with a valid patient ID in PID.3 (e.g., PID.3=54321).",
+        "Transform the ADT message to a FHIR Patient resource using the updated system.",
+        "Validate that the Patient.identifier.value matches the PID.3 value (54321).",
+        "Validate that the Patient.identifier.system is 'http://hospital.org/patient-ids'."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains an identifier with the correct system and value from PID.3 after the update. Otherwise, it fails.",
+      "TestCaseType": "REGRESSION",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_017_regression_positive",
+      "TestDescription": "Regression test to ensure patient name components (PID.5) are mapped correctly after code refactoring.",
+      "ExpectedOutput": "FHIR Patient resource should contain a name with family, given, and prefix populated from PID.5.1, PID.5.2, and PID.5.5 respectively.",
+      "TestSteps": [
+        "Provide an ADT message with PID.5.1=Johnson, PID.5.2=Alice, PID.5.5=Ms..",
+        "Transform the ADT message to a FHIR Patient resource using the refactored code.",
+        "Validate that the Patient.name array contains an entry with family='Johnson', given=['Alice'], and prefix=['Ms.']"
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains a name element with correctly mapped family, given, and prefix from PID.5 after refactoring. Otherwise, it fails.",
+      "TestCaseType": "REGRESSION",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_018_edge_positive",
+      "TestDescription": "Verify handling of patient identifier (PID.3) with maximum allowed length.",
+      "ExpectedOutput": "FHIR Patient resource should contain an identifier with the system set to 'http://hospital.org/patient-ids' and the value matching the PID.3, even with maximum length.",
+      "TestSteps": [
+        "Provide an ADT message with a patient ID in PID.3 that is close to the maximum allowed length (e.g., PID.3=A123456789012345).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.identifier.value matches the PID.3 value (A123456789012345).",
+        "Validate that the Patient.identifier.system is 'http://hospital.org/patient-ids'."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains an identifier with the correct system and value from PID.3, even with maximum length. Otherwise, it fails.",
+      "TestCaseType": "EDGE",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_019_edge_negative",
+      "TestDescription": "Verify handling of patient identifier (PID.3) exceeding maximum allowed length.",
+      "ExpectedOutput": "Transformation process should generate an error message or truncate the PID.3 value to the maximum allowed length.",
+      "TestSteps": [
+        "Provide an ADT message with a patient ID in PID.3 that exceeds the maximum allowed length (e.g., PID.3=A1234567890123456789).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the transformation process generates an error message or Patient.identifier.value is truncated to the maximum allowed length."
+      ],
+      "PassFailCriteria": "Test passes if the transformation generates an error message or Patient.identifier.value is truncated to the maximum allowed length when PID.3 exceeds the limit. Otherwise, it fails.",
+      "TestCaseType": "EDGE",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_020_edge_positive",
+      "TestDescription": "Verify handling of special characters in patient name components (PID.5).",
+      "ExpectedOutput": "FHIR Patient resource should contain a name with family, given, and prefix populated correctly, including special characters.",
+      "TestSteps": [
+        "Provide an ADT message with special characters in PID.5 components (e.g., PID.5.1=O'Malley, PID.5.2=José, PID.5.5=Dr.).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.name array contains an entry with family='O'Malley', given=['José'], and prefix=['Dr.']"
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains a name element with correctly mapped family, given, and prefix, including special characters. Otherwise, it fails.",
+      "TestCaseType": "EDGE",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_021_edge_positive",
+      "TestDescription": "Verify handling of patient birth date (PID.7) with the earliest possible date.",
+      "ExpectedOutput": "FHIR Patient resource should contain a birthDate matching the earliest possible date.",
+      "TestSteps": [
+        "Provide an ADT message with the earliest possible date in PID.7 in YYYYMMDD format (e.g., PID.7=18000101).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.birthDate matches the converted date (1800-01-01)."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains a birthDate with the correctly converted earliest possible date from PID.7. Otherwise, it fails.",
+      "TestCaseType": "EDGE",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_022_edge_positive",
+      "TestDescription": "Verify handling of patient address (PID.11) with maximum length for address line.",
+      "ExpectedOutput": "FHIR Patient resource should contain an address with line populated from PID.11.1 up to the maximum allowed length.",
+      "TestSteps": [
+        "Provide an ADT message with PID.11.1 (line) populated with a string close to the maximum allowed length.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.address array contains an entry with line matching the PID.11.1 value up to the maximum allowed length."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains an address element with correctly mapped line from PID.11.1, considering the maximum length. Otherwise, it fails.",
+      "TestCaseType": "EDGE",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_023_edge_negative",
+      "TestDescription": "Verify handling of patient address (PID.11) exceeding maximum length for address line.",
+      "ExpectedOutput": "Transformation process should either generate an error message or truncate the PID.11.1 value to the maximum allowed length.",
+      "TestSteps": [
+        "Provide an ADT message with PID.11.1 (line) populated with a string exceeding the maximum allowed length.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the transformation process generates an error message or Patient.address.line is truncated to the maximum allowed length."
+      ],
+      "PassFailCriteria": "Test passes if the transformation generates an error message or Patient.address.line is truncated to the maximum allowed length when PID.11.1 exceeds the limit. Otherwise, it fails.",
+      "TestCaseType": "EDGE",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_024_functional_positive",
+      "TestDescription": "Verify successful mapping of multiple addresses (PID.11) to FHIR Patient.address.",
+      "ExpectedOutput": "FHIR Patient resource should contain multiple address entries with line, city, state, and postalCode populated from corresponding PID.11 segments.",
+      "TestSteps": [
+        "Provide an ADT message with multiple PID.11 segments, each containing different address information (e.g., PID.11[1].1=123 Main St, PID.11[1].3=Anytown, PID.11[1].4=CA, PID.11[1].5=91234, PID.11[2].1=456 Oak Ave, PID.11[2].3=Sometown, PID.11[2].4=NY, PID.11[2].5=10001).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.address array contains multiple entries with the correct address information from each PID.11 segment."
+      ],
+      "PassFailCriteria": "Test passes if the FHIR Patient resource contains multiple address elements with correctly mapped data from corresponding PID.11 segments. Otherwise, it fails.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    }
+  ],
+  "StatisticalSummary": {
+    "MappingRows": 5,
+    "UniqueAttributes": 5,
+    "TestCaseTypeBreakdown": {
+      "FUNCTIONAL": 15,
+      "REGRESSION": 2,
+      "EDGE": 7
+    },
+    "SubtypeBreakdown": {
+      "POSITIVE": 16,
+      "NEGATIVE": 8
+    }
+  }
+}
+```

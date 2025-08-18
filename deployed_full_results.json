@@ -1,0 +1,266 @@
+{
+  "TestCases": [
+    {
+      "TestCaseID": "B_001_TC_001_functional_positive",
+      "TestDescription": "Verify successful mapping of patient identifier from PID.3 to Patient.identifier with a valid patient ID.",
+      "ExpectedOutput": "Patient resource with identifier populated with the value from PID.3 and system set to http://hospital.org/patient-ids.",
+      "TestSteps": [
+        "Provide an ADT message with a valid patient ID in PID.3.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.identifier.value in the FHIR resource matches the value in PID.3.",
+        "Validate that the Patient.identifier.system in the FHIR resource is http://hospital.org/patient-ids."
+      ],
+      "PassFailCriteria": "Test passes if Patient.identifier.value is correctly mapped from PID.3 and Patient.identifier.system is correctly set to http://hospital.org/patient-ids.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_002_functional_negative",
+      "TestDescription": "Verify handling of missing patient identifier in PID.3. Patient.identifier should not be populated.",
+      "ExpectedOutput": "Patient resource with identifier element not populated.",
+      "TestSteps": [
+        "Provide an ADT message with an empty PID.3 field.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.identifier element is not present in the FHIR resource."
+      ],
+      "PassFailCriteria": "Test passes if the Patient.identifier element is not present in the FHIR resource.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_003_edge_negative",
+      "TestDescription": "Verify handling of invalid characters in PID.3. Patient.identifier should contain the invalid data or be handled as configured (e.g., error logged).",
+      "ExpectedOutput": "Patient resource with identifier containing invalid characters as is, or an error is logged, depending on the system's error handling configuration.",
+      "TestSteps": [
+        "Provide an ADT message with PID.3 containing invalid characters (e.g., special symbols).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate the Patient.identifier.value for the presence of invalid characters, or verify that the system's error log indicates an error."
+      ],
+      "PassFailCriteria": "Test passes if the Patient.identifier.value contains the invalid characters as is, or if an error is logged.",
+      "TestCaseType": "EDGE",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_004_regression_positive",
+      "TestDescription": "Regression test to ensure patient identifier mapping from PID.3 to Patient.identifier continues to function correctly after system updates.",
+      "ExpectedOutput": "Patient resource with identifier populated correctly from PID.3, system http://hospital.org/patient-ids.",
+      "TestSteps": [
+        "Provide an ADT message with a valid patient ID in PID.3.",
+        "Transform the ADT message to a FHIR Patient resource using the updated system.",
+        "Validate that the Patient.identifier.value in the FHIR resource matches the value in PID.3, and system is http://hospital.org/patient-ids."
+      ],
+      "PassFailCriteria": "Test passes if Patient.identifier.value is correctly mapped from PID.3 and system is http://hospital.org/patient-ids.",
+      "TestCaseType": "REGRESSION",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_005_functional_positive",
+      "TestDescription": "Verify successful mapping of patient name components from PID.5 to Patient.name.",
+      "ExpectedOutput": "Patient resource with name populated with family, given, and prefix from PID.5.1, PID.5.2, and PID.5.5 respectively.",
+      "TestSteps": [
+        "Provide an ADT message with valid name components in PID.5.1, PID.5.2, and PID.5.5.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.name.family matches PID.5.1, Patient.name.given matches PID.5.2, and Patient.name.prefix matches PID.5.5."
+      ],
+      "PassFailCriteria": "Test passes if Patient.name.family, Patient.name.given, and Patient.name.prefix are correctly mapped from PID.5.1, PID.5.2, and PID.5.5 respectively.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_006_functional_negative",
+      "TestDescription": "Verify handling of missing name components in PID.5. Patient.name should be populated with available components.",
+      "ExpectedOutput": "Patient resource with name populated with only the available name components from PID.5.",
+      "TestSteps": [
+        "Provide an ADT message with only PID.5.1 populated and PID.5.2 and PID.5.5 empty.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.name.family is populated from PID.5.1 and Patient.name.given and Patient.name.prefix are not present."
+      ],
+      "PassFailCriteria": "Test passes if Patient.name is populated only with the available name components from PID.5.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_007_edge_positive",
+      "TestDescription": "Verify handling of multiple given names in PID.5.2. All given names should be present in Patient.name.given.",
+      "ExpectedOutput": "Patient resource with Patient.name.given containing all given names from PID.5.2.",
+      "TestSteps": [
+        "Provide an ADT message with multiple given names in PID.5.2 (e.g., 'John David').",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that Patient.name.given contains both 'John' and 'David'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.name.given contains all given names from PID.5.2.",
+      "TestCaseType": "EDGE",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_008_regression_positive",
+      "TestDescription": "Regression test to ensure patient name mapping from PID.5 to Patient.name continues to function correctly after system updates.",
+      "ExpectedOutput": "Patient resource with name populated correctly from PID.5.",
+      "TestSteps": [
+        "Provide an ADT message with valid name components in PID.5.",
+        "Transform the ADT message to a FHIR Patient resource using the updated system.",
+        "Validate that Patient.name.family, Patient.name.given, and Patient.name.prefix are correctly mapped from PID.5."
+      ],
+      "PassFailCriteria": "Test passes if Patient.name is correctly mapped from PID.5.",
+      "TestCaseType": "REGRESSION",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_009_functional_positive",
+      "TestDescription": "Verify successful mapping of patient birth date from PID.7 to Patient.birthDate with a valid date format.",
+      "ExpectedOutput": "Patient resource with birthDate populated from PID.7 in YYYY-MM-DD format.",
+      "TestSteps": [
+        "Provide an ADT message with a valid birth date in PID.7 in YYYYMMDD format.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.birthDate matches the converted date from PID.7 in YYYY-MM-DD format."
+      ],
+      "PassFailCriteria": "Test passes if Patient.birthDate is correctly mapped and formatted from PID.7.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_010_functional_negative",
+      "TestDescription": "Verify handling of missing birth date in PID.7. Patient.birthDate should not be populated.",
+      "ExpectedOutput": "Patient resource with birthDate not populated.",
+      "TestSteps": [
+        "Provide an ADT message with an empty PID.7 field.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.birthDate element is not present in the FHIR resource."
+      ],
+      "PassFailCriteria": "Test passes if the Patient.birthDate element is not present in the FHIR resource.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_011_edge_negative",
+      "TestDescription": "Verify handling of invalid date format in PID.7. Patient.birthDate should not be populated or an error should be logged.",
+      "ExpectedOutput": "Patient resource with birthDate not populated, or an error is logged.",
+      "TestSteps": [
+        "Provide an ADT message with an invalid date format in PID.7 (e.g., YYYY/MM/DD).",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.birthDate is not populated or an error is logged."
+      ],
+      "PassFailCriteria": "Test passes if Patient.birthDate is not populated or an error is logged.",
+      "TestCaseType": "EDGE",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_012_edge_positive",
+      "TestDescription": "Verify handling of edge case date 19000101. Patient.birthDate should be populated",
+      "ExpectedOutput": "Patient resource with birthDate populated.",
+      "TestSteps": [
+        "Provide an ADT message with PID.7 set to 19000101.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that Patient.birthDate is 1900-01-01."
+      ],
+      "PassFailCriteria": "Test passes if Patient.birthDate is correctly set to 1900-01-01",
+      "TestCaseType": "EDGE",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_013_regression_positive",
+      "TestDescription": "Regression test to ensure patient birth date mapping from PID.7 to Patient.birthDate continues to function correctly after system updates.",
+      "ExpectedOutput": "Patient resource with birthDate populated correctly from PID.7.",
+      "TestSteps": [
+        "Provide an ADT message with a valid birth date in PID.7.",
+        "Transform the ADT message to a FHIR Patient resource using the updated system.",
+        "Validate that Patient.birthDate is correctly mapped and formatted from PID.7."
+      ],
+      "PassFailCriteria": "Test passes if Patient.birthDate is correctly mapped from PID.7.",
+      "TestCaseType": "REGRESSION",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_014_functional_positive",
+      "TestDescription": "Verify successful mapping of patient gender from PID.8 to Patient.gender using HL7 Table 0001.",
+      "ExpectedOutput": "Patient resource with gender populated based on the HL7 Table 0001 mapping (M to male, F to female, U to unknown).",
+      "TestSteps": [
+        "Provide an ADT message with PID.8 set to 'M'.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.gender is set to 'male'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is correctly mapped based on HL7 Table 0001.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_015_functional_positive",
+      "TestDescription": "Verify successful mapping of patient gender from PID.8 to Patient.gender using HL7 Table 0001.",
+      "ExpectedOutput": "Patient resource with gender populated based on the HL7 Table 0001 mapping (M to male, F to female, U to unknown).",
+      "TestSteps": [
+        "Provide an ADT message with PID.8 set to 'F'.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.gender is set to 'female'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is correctly mapped based on HL7 Table 0001.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_016_functional_positive",
+      "TestDescription": "Verify successful mapping of patient gender from PID.8 to Patient.gender using HL7 Table 0001.",
+      "ExpectedOutput": "Patient resource with gender populated based on the HL7 Table 0001 mapping (M to male, F to female, U to unknown).",
+      "TestSteps": [
+        "Provide an ADT message with PID.8 set to 'U'.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.gender is set to 'unknown'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is correctly mapped based on HL7 Table 0001.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "POSITIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_017_functional_negative",
+      "TestDescription": "Verify handling of missing gender in PID.8. Patient.gender should not be populated.",
+      "ExpectedOutput": "Patient resource with gender not populated.",
+      "TestSteps": [
+        "Provide an ADT message with an empty PID.8 field.",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.gender element is not present in the FHIR resource."
+      ],
+      "PassFailCriteria": "Test passes if the Patient.gender element is not present in the FHIR resource.",
+      "TestCaseType": "FUNCTIONAL",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_018_edge_negative",
+      "TestDescription": "Verify handling of invalid gender code in PID.8. Patient.gender should not be populated or an error should be logged.",
+      "ExpectedOutput": "Patient resource with gender not populated, or an error is logged.",
+      "TestSteps": [
+        "Provide an ADT message with an invalid gender code in PID.8 (e.g., 'X').",
+        "Transform the ADT message to a FHIR Patient resource.",
+        "Validate that the Patient.gender is not populated or an error is logged."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is not populated or an error is logged.",
+      "TestCaseType": "EDGE",
+      "Subtype": "NEGATIVE"
+    },
+    {
+      "TestCaseID": "B_001_TC_019_regression_positive",
+      "TestDescription": "Regression test to ensure patient gender mapping from PID.8 to Patient.gender continues to function correctly after system updates.",
+      "ExpectedOutput": "Patient resource with gender populated correctly from PID.8 based on HL7 Table 0001.",
+      "TestSteps": [
+        "Provide an ADT message with a valid gender code in PID.8.",
+        "Transform the ADT message to a FHIR Patient resource using the updated system.",
+        "Validate that Patient.gender is correctly mapped based on HL7 Table 0001."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is correctly mapped from PID.8.",
+      "TestCaseType": "REGRESSION",
+      "Subtype": "POSITIVE"
+    }
+  ],
+  "StatisticalSummary": {
+    "MappingRows": 4,
+    "UniqueAttributes": 4,
+    "TestCaseTypeBreakdown": {
+      "FUNCTIONAL": 9,
+      "REGRESSION": 4,
+      "EDGE": 6
+    },
+    "SubtypeBreakdown": {
+      "POSITIVE": 12,
+      "NEGATIVE": 7
+    },
+    "TotalTestCases": 19
+  }
+}

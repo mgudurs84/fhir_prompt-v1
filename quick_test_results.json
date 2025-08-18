@@ -1,0 +1,171 @@
+{
+  "TestCases": [
+    {
+      "TestCaseID": "B_QUICK_001_TC_001_functional_positive",
+      "TestDescription": "Verify successful mapping of patient identifier from PID.3 to Patient.identifier with a valid identifier value.",
+      "ExpectedOutput": "Patient resource should contain an identifier element with the value from PID.3.",
+      "TestSteps": [
+        "Provide an HL7 message with a valid identifier in PID.3 (e.g., 12345).",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient.identifier.value contains the value from PID.3."
+      ],
+      "PassFailCriteria": "Test passes if Patient.identifier.value matches the PID.3 value."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_002_functional_negative",
+      "TestDescription": "Verify handling of missing patient identifier in PID.3. The Patient resource should still be created, but identifier should be absent.",
+      "ExpectedOutput": "Patient resource should be created without the identifier element.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.3 empty.",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient resource does not contain the identifier element."
+      ],
+      "PassFailCriteria": "Test passes if Patient resource is created and does not contain the identifier element."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_003_functional_positive",
+      "TestDescription": "Verify successful mapping of gender from PID.8 to Patient.gender with a valid gender code (M).",
+      "ExpectedOutput": "Patient resource should contain a gender element with the value 'male'.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.8 set to 'M'.",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient.gender element contains the value 'male'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is 'male'."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_004_functional_positive",
+      "TestDescription": "Verify successful mapping of gender from PID.8 to Patient.gender with a valid gender code (F).",
+      "ExpectedOutput": "Patient resource should contain a gender element with the value 'female'.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.8 set to 'F'.",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient.gender element contains the value 'female'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is 'female'."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_005_functional_positive",
+      "TestDescription": "Verify successful mapping of gender from PID.8 to Patient.gender with a valid gender code (O).",
+      "ExpectedOutput": "Patient resource should contain a gender element with the value 'other'.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.8 set to 'O'.",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient.gender element contains the value 'other'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is 'other'."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_006_functional_positive",
+      "TestDescription": "Verify successful mapping of gender from PID.8 to Patient.gender with a valid gender code (UN).",
+      "ExpectedOutput": "Patient resource should contain a gender element with the value 'unknown'.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.8 set to 'UN'.",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient.gender element contains the value 'unknown'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is 'unknown'."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_007_functional_negative",
+      "TestDescription": "Verify handling of invalid gender code in PID.8.  The Patient resource should be created, but gender should be absent.",
+      "ExpectedOutput": "Patient resource should be created without the gender element.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.8 set to 'X'.",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient resource does not contain the gender element."
+      ],
+      "PassFailCriteria": "Test passes if Patient resource is created and does not contain the gender element."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_008_functional_negative",
+      "TestDescription": "Verify handling of empty gender code in PID.8. The Patient resource should be created, but gender should be absent.",
+      "ExpectedOutput": "Patient resource should be created without the gender element.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.8 empty.",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient resource does not contain the gender element."
+      ],
+      "PassFailCriteria": "Test passes if Patient resource is created and does not contain the gender element."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_009_regression_positive",
+      "TestDescription": "Regression test to ensure that the identifier mapping from PID.3 to Patient.identifier still works after a recent code change.",
+      "ExpectedOutput": "Patient resource should contain an identifier element with the value from PID.3.",
+      "TestSteps": [
+        "Provide an HL7 message with a valid identifier in PID.3 (e.g., 67890).",
+        "Transform the HL7 message to a FHIR Patient resource using the updated code.",
+        "Validate that the Patient.identifier.value contains the value from PID.3."
+      ],
+      "PassFailCriteria": "Test passes if Patient.identifier.value matches the PID.3 value."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_010_regression_positive",
+      "TestDescription": "Regression test to ensure that the gender mapping from PID.8 to Patient.gender still works after a recent code change.",
+      "ExpectedOutput": "Patient resource should contain a gender element with the value corresponding to PID.8.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.8 set to 'M'.",
+        "Transform the HL7 message to a FHIR Patient resource using the updated code.",
+        "Validate that the Patient.gender element contains the value 'male'."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is 'male'."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_011_edge_positive",
+      "TestDescription": "Edge case: PID.3 contains a very long string. Verify that the identifier is still mapped, potentially truncated, and that no errors occur.",
+      "ExpectedOutput": "Patient resource should contain an identifier element with a value derived from PID.3, possibly truncated to the maximum allowed length.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.3 containing a string longer than the allowed length for FHIR identifier.value (e.g., 256 characters).",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient.identifier.value is present and contains a substring of PID.3, and that no truncation errors occurred."
+      ],
+      "PassFailCriteria": "Test passes if Patient.identifier.value is present, contains a relevant substring of PID.3, and no truncation errors are reported."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_012_edge_negative",
+      "TestDescription": "Edge case: PID.3 contains special characters. Verify that the identifier is mapped correctly, encoding special characters as needed.",
+      "ExpectedOutput": "Patient resource should contain an identifier element with the value from PID.3, with special characters properly encoded.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.3 containing special characters (e.g., \"!@#$%^&*()\").",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate that the Patient.identifier.value contains the value from PID.3, with special characters properly encoded (e.g., URL encoded)."
+      ],
+      "PassFailCriteria": "Test passes if Patient.identifier.value matches the PID.3 value, with special characters encoded correctly."
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_013_edge_positive",
+      "TestDescription": "Edge case: PID.8 contains a value close to the allowed maximum length. Verify proper mapping of gender.",
+      "ExpectedOutput": "Patient resource should contain gender element with correct mapping",
+      "TestSteps": [
+        "Provide an HL7 message with PID.8 containing valid gender value of allowed maximum length",
+        "Transform HL7 message to a FHIR Patient resource",
+        "Validate Patient.gender element contains the correct value."
+      ],
+      "PassFailCriteria": "Test passes if Patient.gender is correct"
+    },
+    {
+      "TestCaseID": "B_QUICK_001_TC_014_edge_negative",
+      "TestDescription": "Edge case: PID.3 contains null characters. Verify how null characters are handled during transformation.",
+      "ExpectedOutput": "Patient resource should contain identifier field properly mapped or rejected if null characters are not supported.",
+      "TestSteps": [
+        "Provide an HL7 message with PID.3 containing null characters.",
+        "Transform the HL7 message to a FHIR Patient resource.",
+        "Validate Patient.identifier.value element contains the expected value or is rejected if null characters aren't supported."
+      ],
+      "PassFailCriteria": "Test passes if Patient.identifier.value mapping behaves as expected or errors are handled as defined in the transformation logic."
+    }
+  ],
+  "StatisticalSummary": {
+    "MappingRows": 2,
+    "UniqueAttributes": 2,
+    "TestCaseTypeBreakdown": {
+      "FUNCTIONAL": 8,
+      "REGRESSION": 2,
+      "EDGE": 4
+    },
+    "TestCaseSubtypeBreakdown": {
+      "POSITIVE": 8,
+      "NEGATIVE": 6
+    }
+  }
+}

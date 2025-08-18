@@ -1,0 +1,7 @@
+{
+  "resource_name": "projects/869395420831/locations/us-central1/reasoningEngines/3620181616871079936",
+  "project_id": "vertex-ai-demo-468112",
+  "location": "us-central1",
+  "deployment_time": "177314.4347501",
+  "agent_name": "fhir_testcase_generator"
+}
