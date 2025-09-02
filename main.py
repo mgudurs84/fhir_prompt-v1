@@ -26,8 +26,6 @@ def setup_impersonated_credentials():
         # Target scopes for Vertex AI and Cloud Storage
         target_scopes = [
             'https://www.googleapis.com/auth/cloud-platform',
-            'https://www.googleapis.com/auth/storage-full-control',
-            'https://www.googleapis.com/auth/aiplatform'
         ]
         
         # Get default credentials
