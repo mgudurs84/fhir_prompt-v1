@@ -1,6 +1,7 @@
 """
 Main script to run the FHIR Testing Agent
 With deployment functionality to Google Cloud Platform
+Using service account impersonation for cross-project access
 """
 
 import os
@@ -13,9 +14,118 @@ from vertexai.preview.reasoning_engines import AdkApp
 from vertexai import agent_engines
 from agent import root_agent
 import vertexai
+import google.auth
+from google.auth import impersonated_credentials
 
 # Load environment variables
 load_dotenv()
+
+def setup_impersonated_credentials():
+    """Setup impersonated credentials for cross-project access"""
+    try:
+        # Target scopes for Vertex AI and Cloud Storage
+        target_scopes = [
+            'https://www.googleapis.com/auth/cloud-platform',
+            'https://www.googleapis.com/auth/storage-full-control',
+            'https://www.googleapis.com/auth/aiplatform'
+        ]
+        
+        # Get default credentials
+        source_creds, project_id = google.auth.default()
+        
+        # Service account to impersonate for compute operations
+        target_service_account = os.getenv("TARGET_SERVICE_ACCOUNT", 
+            "vertex-agent-service@anbc-dev-cdr-de.iam.gserviceaccount.com")
+        
+        # Create impersonated credentials
+        impersonated_creds = impersonated_credentials.Credentials(
+            source_credentials=source_creds,
+            target_principal=target_service_account,
+            target_scopes=target_scopes
+        )
+        
+        print(f"✅ Impersonated credentials setup successful")
+        print(f"🎭 Target service account: {target_service_account}")
+        
+        return impersonated_creds
+        
+    except Exception as e:
+        print(f"❌ Failed to setup impersonated credentials: {str(e)}")
+        print("💡 Falling back to default credentials")
+        return None
+
+def get_project_config():
+    """Get project configuration for storage and compute"""
+    
+    # Check if we're using cross-project deployment (anbc-dev setup)
+    use_cross_project = os.getenv("USE_CROSS_PROJECT_DEPLOYMENT", "false").lower() == "true"
+    
+    if use_cross_project:
+        # Cross-project setup: anbc-dev for storage, anbc-dev-cdr-de for compute
+        config = {
+            "storage_project": os.getenv("STORAGE_PROJECT", "anbc-dev"),
+            "staging_bucket": os.getenv("CROSS_PROJECT_STAGING_BUCKET", "gs://anbc-dev-vertex-staging"),
+            "compute_project": os.getenv("COMPUTE_PROJECT", "anbc-dev-cdr-de"),
+            "location": os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
+            "target_service_account": os.getenv("TARGET_SERVICE_ACCOUNT", 
+                "vertex-agent-service@anbc-dev-cdr-de.iam.gserviceaccount.com"),
+            "use_impersonation": True
+        }
+    else:
+        # Single project setup using existing .env configuration
+        project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+        if not project_id:
+            raise ValueError("GOOGLE_CLOUD_PROJECT not set in .env file")
+            
+        config = {
+            "storage_project": project_id,
+            "staging_bucket": os.getenv("STAGING_BUCKET"),
+            "compute_project": project_id,
+            "location": os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
+            "target_service_account": None,
+            "use_impersonation": False
+        }
+        
+        if not config["staging_bucket"]:
+            raise ValueError("STAGING_BUCKET not set in .env file")
+    
+    print("🔧 Project Configuration:")
+    print(f"   Mode: {'Cross-Project' if use_cross_project else 'Single Project'}")
+    print(f"   Storage Project: {config['storage_project']}")
+    print(f"   Staging Bucket: {config['staging_bucket']}")
+    print(f"   Compute Project: {config['compute_project']}")
+    print(f"   Location: {config['location']}")
+    if config.get("target_service_account"):
+        print(f"   Service Account: {config['target_service_account']}")
+    
+    return config
+
+def initialize_vertex_ai(config, credentials=None):
+    """Initialize Vertex AI with proper project and credentials"""
+    try:
+        # Initialize with compute project and staging bucket
+        init_params = {
+            "project": config["compute_project"],
+            "location": config["location"],
+            "staging_bucket": config["staging_bucket"]
+        }
+        
+        # Add credentials if using impersonation
+        if credentials:
+            init_params["credentials"] = credentials
+        
+        vertexai.init(**init_params)
+        
+        print(f"✅ Vertex AI initialized successfully!")
+        print(f"   Compute Project: {config['compute_project']}")
+        print(f"   Staging Bucket: {config['staging_bucket']}")
+        print(f"   Using Impersonation: {config.get('use_impersonation', False)}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Vertex AI initialization failed: {str(e)}")
+        return False
 
 def clean_json_response(response: str) -> str:
     """Clean markdown formatting from JSON response"""
@@ -39,30 +149,25 @@ def clean_json_response(response: str) -> str:
 async def test_local_agent():
     """Test the agent locally before deployment"""
     
-    # Get configuration from environment variables
-    PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-    LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-    STAGING_BUCKET = os.getenv("STAGING_BUCKET")
+    print("🧪 Testing agent locally...")
     
-    if not PROJECT_ID or not STAGING_BUCKET:
-        print("❌ Missing configuration in .env file")
+    # Setup configuration
+    config = get_project_config()
+    
+    # Setup credentials based on configuration
+    credentials = None
+    if config.get("use_impersonation"):
+        credentials = setup_impersonated_credentials()
+    
+    # Initialize Vertex AI
+    if not initialize_vertex_ai(config, credentials):
         return None
     
     try:
-        # Initialize Vertex AI
-        vertexai.init(
-            project=PROJECT_ID, 
-            location=LOCATION,
-            staging_bucket=STAGING_BUCKET
-        )
-        
         # Create ADK app
         app = AdkApp(agent=root_agent)
         
-        print(f"🧪 Testing agent locally...")
-        print(f"Agent: {root_agent.name}")
-        print(f"Project: {PROJECT_ID}")
-        print(f"Location: {LOCATION}")
+        print(f"🤖 Agent: {root_agent.name}")
         
         # Simple test prompt
         test_prompt = """Generate 2 functional test cases for this mapping:
@@ -92,7 +197,7 @@ TestCaseID format: B_001_TC_001_functional_positive"""
         
         if final_response:
             print("✅ Local test successful!")
-            print(f"📝 Response length: {len(final_response)} chars")
+            print(f"📄 Response length: {len(final_response)} chars")
             
             # Try to parse JSON
             cleaned_response = clean_json_response(final_response)
@@ -116,8 +221,17 @@ async def deploy_to_agent_engine(app):
     """Deploy the agent to Vertex AI Agent Engine"""
     
     try:
+        config = get_project_config()
+        
         print("\n🚀 Deploying to Vertex AI Agent Engine...")
-        print("This may take 5-10 minutes...")
+        if config.get("use_impersonation"):
+            print("📍 Deploying to: anbc-dev-cdr-de")
+            print("💾 Using staging bucket from: anbc-dev")
+            print("🎭 Using service account impersonation")
+        else:
+            print(f"📍 Deploying to: {config['compute_project']}")
+            print(f"💾 Using staging bucket: {config['staging_bucket']}")
+        print("⏱️ This may take 5-10 minutes...")
         
         # Deploy to Agent Engine
         remote_agent = agent_engines.create(
@@ -133,17 +247,23 @@ async def deploy_to_agent_engine(app):
         )
         
         print(f"✅ Agent deployed successfully!")
-        print(f"📍 Resource name: {remote_agent.resource_name}")
+        print(f"📄 Resource name: {remote_agent.resource_name}")
         print(f"🔗 Resource ID: {remote_agent.resource_name.split('/')[-1]}")
         
         # Save deployment info
         deployment_info = {
             "resource_name": remote_agent.resource_name,
-            "project_id": os.getenv("GOOGLE_CLOUD_PROJECT"),
-            "location": os.getenv("GOOGLE_CLOUD_LOCATION"),
+            "compute_project": config["compute_project"],
+            "storage_project": config["storage_project"],
+            "location": config["location"],
+            "staging_bucket": config["staging_bucket"],
+            "use_impersonation": config.get("use_impersonation", False),
             "deployment_time": str(asyncio.get_event_loop().time()),
             "agent_name": root_agent.name
         }
+        
+        if config.get("target_service_account"):
+            deployment_info["target_service_account"] = config["target_service_account"]
         
         with open("deployment_info.json", "w") as f:
             json.dump(deployment_info, f, indent=2)
@@ -155,10 +275,17 @@ async def deploy_to_agent_engine(app):
     except Exception as e:
         print(f"❌ Deployment failed: {str(e)}")
         print("\nPossible issues:")
-        print("1. Agent Engine API not enabled")
-        print("2. Insufficient permissions")
-        print("3. Staging bucket access issues")
-        print("4. Resource quota limits")
+        if config.get("use_impersonation"):
+            print("1. Agent Engine API not enabled in anbc-dev-cdr-de")
+            print("2. Insufficient permissions for service account impersonation")
+            print("3. Cross-project staging bucket access issues")
+            print("4. Resource quota limits in anbc-dev-cdr-de")
+            print("5. Service account vertex-agent-service@anbc-dev-cdr-de.iam.gserviceaccount.com missing permissions")
+        else:
+            print("1. Agent Engine API not enabled")
+            print("2. Insufficient permissions")
+            print("3. Staging bucket access issues")
+            print("4. Resource quota limits")
         return None
 
 async def test_deployed_agent(remote_agent):
@@ -196,7 +323,7 @@ Output JSON format with TestCases array."""
         
         if final_response:
             print("✅ Deployed agent test successful!")
-            print(f"📝 Response preview: {final_response[:200]}...")
+            print(f"📄 Response preview: {final_response[:200]}...")
             
             # Save test result
             with open("deployment_test_result.txt", "w") as f:
@@ -215,35 +342,26 @@ Output JSON format with TestCases array."""
 async def run_full_example_locally():
     """Run the full example locally (original functionality)"""
     
-    # Get configuration from environment variables
-    PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-    LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-    STAGING_BUCKET = os.getenv("STAGING_BUCKET")
+    print("🏠 Running full example locally...")
     
-    if not PROJECT_ID:
-        print("Error: GOOGLE_CLOUD_PROJECT not set in .env file")
-        return
+    # Setup configuration
+    config = get_project_config()
     
-    if not STAGING_BUCKET:
-        print("Error: STAGING_BUCKET not set in .env file")
+    # Setup credentials based on configuration
+    credentials = None
+    if config.get("use_impersonation"):
+        credentials = setup_impersonated_credentials()
+    
+    # Initialize Vertex AI
+    if not initialize_vertex_ai(config, credentials):
         return
     
     try:
-        # Initialize Vertex AI
-        vertexai.init(
-            project=PROJECT_ID, 
-            location=LOCATION,
-            staging_bucket=STAGING_BUCKET
-        )
-        
         # Create ADK app
         app = AdkApp(agent=root_agent)
         
-        print(f"FHIR Testing Agent initialized successfully!")
-        print(f"Agent name: {root_agent.name}")
-        print(f"Project: {PROJECT_ID}")
-        print(f"Location: {LOCATION}")
-        print(f"Staging Bucket: {STAGING_BUCKET}")
+        print(f"🎯 FHIR Testing Agent initialized successfully!")
+        print(f"🤖 Agent name: {root_agent.name}")
         
         # Full example prompt
         user_prompt = """Generate functional, regression, and edge test cases for the mapping CSV file that covers every possible attribute.
@@ -270,8 +388,8 @@ Include TestCaseID, TestDescription, ExpectedOutput, TestSteps, and PassFailCrit
 
 IMPORTANT: Output only pure JSON without any markdown formatting or code blocks."""
 
-        print("\nGenerating test cases...")
-        print("This may take a few moments...")
+        print("\n⚙️ Generating test cases...")
+        print("⏱️ This may take a few moments...")
         
         # Query the agent
         response_events = []
@@ -295,7 +413,7 @@ IMPORTANT: Output only pure JSON without any markdown formatting or code blocks.
             # Clean the response
             cleaned_response = clean_json_response(final_response)
             
-            print(f"📝 Response length: {len(final_response)} chars")
+            print(f"📄 Response length: {len(final_response)} chars")
             print(f"🧹 Cleaned length: {len(cleaned_response)} chars")
             
             # Try to parse as JSON
@@ -308,7 +426,7 @@ IMPORTANT: Output only pure JSON without any markdown formatting or code blocks.
                 with open("generated_test_cases.json", "w") as f:
                     json.dump(result, f, indent=2)
                 
-                print("📁 Results saved to 'generated_test_cases.json'")
+                print("📄 Results saved to 'generated_test_cases.json'")
                 
                 # Show summary
                 if "TestCases" in result:
@@ -321,8 +439,8 @@ IMPORTANT: Output only pure JSON without any markdown formatting or code blocks.
                 # Show first test case
                 if "TestCases" in result and result["TestCases"]:
                     first_test = result["TestCases"][0]
-                    print(f"🔍 First test case: {first_test.get('TestCaseID', 'N/A')}")
-                    print(f"📄 Description: {first_test.get('TestDescription', 'N/A')[:100]}...")
+                    print(f"📄 First test case: {first_test.get('TestCaseID', 'N/A')}")
+                    print(f"📝 Description: {first_test.get('TestDescription', 'N/A')[:100]}...")
                 
             except json.JSONDecodeError as e:
                 print(f"⚠️ JSON parsing failed: {e}")
@@ -343,8 +461,8 @@ IMPORTANT: Output only pure JSON without any markdown formatting or code blocks.
 async def main():
     """Main function with deployment options"""
     
-    print("🚀 FHIR Testing Agent - Deployment Ready")
-    print("=" * 50)
+    print("🚀 FHIR Testing Agent - Cross-Project Deployment Ready")
+    print("=" * 60)
     
     # Check command line arguments
     if len(sys.argv) > 1:
@@ -352,7 +470,16 @@ async def main():
         
         if command == "deploy":
             print("🚀 DEPLOYMENT MODE")
-            print("This will deploy your agent to Vertex AI Agent Engine")
+            
+            # Check configuration mode
+            config = get_project_config()
+            if config.get("use_impersonation"):
+                print("📍 Storage: anbc-dev (staging bucket)")
+                print("🖥️  Compute: anbc-dev-cdr-de (agent engine)")
+                print("🎭 Using service account impersonation")
+            else:
+                print(f"📍 Project: {config['compute_project']}")
+                print(f"🖥️  Using standard authentication")
             
             # Test locally first
             app = await test_local_agent()
@@ -369,7 +496,10 @@ async def main():
                 print("\n🎉 DEPLOYMENT COMPLETE!")
                 print("📋 Next steps:")
                 print("1. Check deployment_info.json for resource details")
-                print("2. Access your agent via the Vertex AI console")
+                if config.get("use_impersonation"):
+                    print("2. Access your agent via the Vertex AI console in anbc-dev-cdr-de")
+                else:
+                    print(f"2. Access your agent via the Vertex AI console in {config['compute_project']}")
                 print("3. Use the resource name for API calls")
                 
             return
@@ -392,10 +522,32 @@ async def main():
     # Default: show options
     print("Choose an option:")
     print("1. python main.py local     - Run full example locally")
-    print("2. python main.py test      - Test agent locally")
+    print("2. python main.py test      - Test agent locally")  
     print("3. python main.py deploy    - Deploy to GCP Agent Engine")
     print("")
     print("💡 Recommendation: Start with 'test' then 'deploy'")
+    print("")
+    print("🔧 Configuration Mode:")
+    
+    # Show current configuration
+    try:
+        config = get_project_config()
+        if config.get("use_impersonation"):
+            print("   Cross-Project Deployment: Enabled")
+            print("   Storage Project: anbc-dev")
+            print("   Compute Project: anbc-dev-cdr-de")
+            print("   Service Account Impersonation: Enabled")
+            print("")
+            print("💡 To use single-project mode, set USE_CROSS_PROJECT_DEPLOYMENT=false in .env")
+        else:
+            print("   Single Project Deployment: Enabled")
+            print(f"   Project: {config['compute_project']}")
+            print("   Service Account Impersonation: Disabled")
+            print("")
+            print("💡 To use cross-project mode, set USE_CROSS_PROJECT_DEPLOYMENT=true in .env")
+    except Exception as e:
+        print(f"   Configuration Error: {e}")
+        print("   Please check your .env file")
 
 if __name__ == "__main__":
     asyncio.run(main())
